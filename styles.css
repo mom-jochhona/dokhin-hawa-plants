@@ -1,0 +1,182 @@
+/* Base page */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #f4f4f4;
+  font-family: Arial, sans-serif;
+}
+
+/* Atomic reusable utility classes */
+.u-hidden {
+  display: none !important;
+}
+
+.u-flex {
+  display: flex;
+}
+
+.u-items-center {
+  align-items: center;
+}
+
+.u-justify-center {
+  justify-content: center;
+}
+
+.u-gap-md {
+  gap: 14px;
+}
+
+.u-mt-md {
+  margin-top: 18px;
+}
+
+.u-text-center {
+  text-align: center;
+}
+
+.u-relative {
+  position: relative;
+}
+
+/* Shared controls */
+button {
+  padding: 7px 11px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+/* Map toolbar */
+.toolbar {
+  position: fixed;
+  z-index: 10;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* North */
+.north-indicator {
+  position: fixed;
+  top: 20px;
+  right: 28px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #263238;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.north-indicator-arrow {
+  font-size: 46px;
+  font-weight: 700;
+}
+
+.north-indicator-label {
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* Modal overlay and dialog */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  place-items: center;
+  padding: 18px;
+  box-sizing: border-box;
+  background: #0008;
+}
+
+.modal-overlay.is-open {
+  display: grid;
+}
+
+.modal-dialog {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: min(760px, 90vh);
+  overflow: auto;
+  padding: 22px 0;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 40px #0004;
+}
+
+.modal-title {
+  margin: 0 42px 0 0;
+  padding: 18px 22px;
+  font-size: 22px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 22px;
+}
+
+/* Pit and photo navigation */
+.pit-navigation {
+  align-self: center;
+  padding: 0 22px;
+}
+
+.photo-area {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  color: #666;
+}
+
+.photo-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+
+.photo-date {
+  position: absolute;
+  bottom: 60px;
+  padding: 8px 16px;
+  color: #fff;
+  background: #000;
+}
+
+/* Map viewport */
+.map-wrap {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.map-canvas {
+  width: min(100vw, 1772px);
+  height: min(100vh, 1000px);
+  background: #fff;
+  box-shadow: 0 1px 8px #0002;
+  touch-action: none;
+}

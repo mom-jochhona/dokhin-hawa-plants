@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>F17A | Plantation Map</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="pits.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+
+<body>
+  <!-- Map zoom controls stay fixed; trackpad pinch zoom is handled within the SVG map. -->
+  <div id="toolbar" class="toolbar">
+    <button id="zoom-in" type="button">+</button>
+    <button id="zoom-out" type="button">−</button>
+    <button id="reset" type="button">Reset view</button>
+  </div>
+  <!-- Fixed north indicator: independent of SVG zoom and pan. -->
+  <div class="north-indicator" aria-label="North">
+    <span class="north-indicator-arrow" aria-hidden="true">⬆️</span>
+    <span class="north-indicator-label">North</span>
+  </div>
+  <div id="pit-modal" class="modal-overlay" aria-hidden="true">
+    <section id="pit-dialog" class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pit-title">
+      <button id="close-modal" class="modal-close" type="button" aria-label="Close">×</button>
+      <h2 id="pit-title" class="modal-title">Pit details</h2>
+      <!-- Carousel for all the pits: navigation stops at the first and last pit. -->
+      <div id="pit-carousel" class="u-flex u-justify-center">
+        <div id="previous-pit" class="pit-navigation">
+          <button id="previous-pit-button" type="button" aria-label="Previous pit">&lt;&lt;</button>
+        </div>
+        
+        <div id="pit-photo-area" class="photo-area u-relative u-text-center">
+          <img id="pit-photo" class="photo-image" alt="" hidden>
+          <!-- Carousel for an individual pit: navigation cycles through. -->
+          <div id="photo-controls" class="u-flex u-items-center u-justify-center u-gap-md u-mt-md" hidden>
+            <button id="previous-photo" type="button" aria-label="Previous photograph">‹</button>
+            <span id="photo-count"></span>
+            <button id="next-photo" type="button" aria-label="Next photograph">›</button>
+          </div>
+          <div id="photo-date" class="photo-date u-hidden"></div>
+          <!-- ToDo: Add a 404 or an empty pit image, or something similar -->
+          <p id="no-photo-message">No photographs are linked to this pit yet.</p>
+        </div>
+        <div id="next-pit" class="pit-navigation">
+          <button id="next-pit-button" type="button" aria-label="Next pit">&gt;&gt;</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div id="map-wrap" class="map-wrap">
+    <svg id="map" class="map-canvas" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1886 1064" preserveAspectRatio="xMidYMid meet">
+      <!-- 
+        Important!
+        These style could be externalize
+        But. lets keep this inline with the SVG, so that when the SVG is externalize, there will no need to worry about its style
+       -->
+      <style>
+        .plot-boundary {
+          fill: none;
+          stroke: #242424;
+          stroke-width: 1.25
+        }
+
+        .block-boundary {
+          fill: none;
+          stroke: #00a88f;
+          stroke-width: 4;
+          stroke-dasharray: 10 9
+        }
+
+        .row-separator {
+          fill: none;
+          stroke: #555555;
+          stroke-width: 1.15;
+          opacity: .82
+        }
+
+        .stream {
+          fill: none;
+          stroke: #0798ed;
+          stroke-width: 8;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          opacity: .95
+        }
+
+        .map-label {
+          font-family: Arial, sans-serif;
+          font-size: 26px;
+          font-weight: 600;
+          fill: #263238;
+          text-anchor: middle;
+          dominant-baseline: middle;
+          paint-order: stroke;
+          stroke: #ffffff;
+          stroke-width: 5px;
+          stroke-linejoin: round;
+        }
+
+        .area-label {
+          font-size: 30px;
+          letter-spacing: 2px;
+        }
+
+        .pit-marker {
+          cursor: pointer;
+          transition: stroke-width .12s, filter .12s;
+          stroke-width: 3.5;
+        }
+
+        .pit-marker:hover {
+          stroke-width: 7;
+          filter: brightness(1.08);
+        }
+
+        .pit-id,
+        .pit-name {
+          fill: #222;
+          text-anchor: middle;
+          pointer-events: none;
+        }
+
+        .pit-id {
+          font-size: 14px;
+        }
+
+        .pit-name {
+          font-size: 10px;
+        }
+
+      </style>
+      <rect id="background" x="0" y="0" width="1886" height="1064" fill="#ffffff" />
+      <g id="plot-boundary">
+        <path id="main-plot-quadrilateral" class="plot-boundary" d="M 354,32 L 1668,510 L 1484,966 L 228,536 Z" />
+      </g>
+      <g id="block-boundaries">
+        <path id="avenue-block" class="block-boundary"
+          d="M 340.85166,17.234441 413.19139,43.468882 278.38278,571.40196 209.04305,549.12447 Z" />
+        <path id="wild1-block" class="block-boundary" d="m 1478,414 89,28 -181.0352,528.82723 -80.8562,-28.71537 z" />
+        <path id="wild2-block" class="block-boundary"
+          d="m 1586.5341,451.02271 110.6136,38.31819 -203,513.9773 L 1407,975 Z" />
+      </g>
+      <g id="row-separators">
+        <path id="row-separator-01" class="row-separator"
+          d="M 904.19017,255.12498 C 1055.6179,428.17589 1126.4754,608.42467 1176.7119,861.16847" />
+        <path id="row-separator-02" class="row-separator"
+          d="m 414.99188,134.97665 c 175,20 328.93807,80.65888 443.93807,180.65888 120,105 165.10865,246.70559 230.10865,466.70559" />
+        <path id="row-separator-03" class="row-separator"
+          d="M 389.99188,203.40305 C 846.21258,270.81701 940.91778,499.79654 1010,772.13198" />
+        <path id="row-separator-04" class="row-separator"
+          d="M 362.33299,271.91472 C 710.9541,326.25181 833.82543,439.91652 936.70558,748.5198" />
+        <path id="row-separator-05" class="row-separator"
+          d="m 349.99188,344.25584 c 284.73539,29.37495 421.21529,168.53109 496.1868,374.90761" />
+        <path id="row-separator-06" class="row-separator"
+          d="m 334.99188,413.51168 c 176.62931,8.52352 349.27976,132.30348 401.51269,264.8071" />
+        <path id="row-separator-07" class="row-separator"
+          d="m 319.24772,492.34112 c 61.70811,4.9089 202.20983,20.14607 301.09441,162.36548" />
+        <path id="row-separator-08" class="row-separator"
+          d="M 1014.6467,288.42389 C 1192.2623,549.77077 1236.6301,727.003 1272.5,888.88586" />
+        <path id="row-separator-09" class="row-separator"
+          d="m 1110.1902,318.42389 c 74.261,115.60876 179.2371,346.24447 221.4674,492.36415" />
+        <path id="row-separator-10" class="row-separator"
+          d="m 1286.9276,391.48064 c 42.3097,61.01137 81.4992,131.83632 109.4678,230.61568" />
+        <path id="row-separator-11" class="row-separator"
+          d="m 1369.199,408.59594 c 2.9086,4.87899 58.7419,98.88319 66.4104,138.47009" />
+        <path id="row-separator-12" class="row-separator"
+          d="m 1191.41,349.01235 c 55.6663,72.57145 141.8464,262.67303 173.7906,359.96971" />
+      </g>
+      <g id="stream-feature">
+        <path id="stream" class="stream" d="M 1570.4831,446 C 1569.3476,681.6138 1387.9017,702.53047 1408,982" />
+      </g>
+      <!-- Map orientation and area labels -->
+      <g id="map-labels">
+
+        <!-- Avenue -->
+        <text id="label-avenue"
+          class="map-label area-label"
+          x="230" y="600"
+          transform="rotate(18 230 600)">AVENUE</text>
+
+        <!-- Plantation rows -->
+        <g id="row-labels">
+          <text id="label-r1" class="map-label" x="190" y="500">R1</text>
+          <text id="label-r2" class="map-label" x="205" y="430">R2</text>
+          <text id="label-r3" class="map-label" x="222" y="360">R3</text>
+          <text id="label-r4" class="map-label" x="240" y="290">R4</text>
+          <text id="label-r5" class="map-label" x="255" y="220">R5</text>
+          <text id="label-r6" class="map-label" x="270" y="150">R6</text>
+          <text id="label-r7" class="map-label" x="290" y="80">R7</text>
+          <text id="label-r8" class="map-label" x="940" y="220">R8</text>
+          <text id="label-r9" class="map-label" x="1040" y="255">R9</text>
+          <text id="label-r10" class="map-label" x="1150" y="290">R10</text>
+          <text id="label-r11" class="map-label" x="1250" y="325">R11</text>
+          <text id="label-r12" class="map-label" x="1320" y="355">R12</text>
+          <text id="label-r13" class="map-label" x="1410" y="380">R13</text>
+        </g>
+
+        <!-- Wild areas -->
+        <g id="wild-area-labels">
+          <text id="label-wild1"
+            class="map-label area-label"
+            x="1540" y="390" 
+            transform="rotate(18 1540 390)">WILD1</text>
+
+          <text id="label-wild2"
+            class="map-label area-label"
+            x="1660" y="428"
+            transform="rotate(18 1660 428)">WILD2</text>
+        </g>
+
+      </g>
+      <g id="pits" class="pit-layer"></g>
+    </svg>
+  </div>
+</body>
+
+</html>
