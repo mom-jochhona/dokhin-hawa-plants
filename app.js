@@ -71,6 +71,8 @@ function renderPitsInSVG() {
 
 const modal = document.getElementById('pit-modal');
 const photoArea = document.getElementById('pit-photo-area');
+const IMAGE_BASE_URL =
+    "https://ik.imagekit.io/4zcvbyytp/dokhin-hawa-plants/images";
 
 // Cache modal elements once. The markup remains in index.html; only its content changes.
 const modalElements = {
@@ -113,7 +115,7 @@ function displayPitPhoto(photoIndex) {
   // Photograph navigation wraps around within the currently selected pit.
   currentPhotoIndex = (photoIndex + photos.length) % photos.length;
   const filename = photos[currentPhotoIndex];
-  modalElements.image.src = `./images/${pitId}/${filename}`;
+  modalElements.image.src = `${IMAGE_BASE_URL}/${pitId}/${filename}`;
   modalElements.image.alt = `Photograph ${currentPhotoIndex + 1} of ${photos.length}`;
   modalElements.image.hidden = false;
   modalElements.photoControls.classList.remove('u-hidden');
