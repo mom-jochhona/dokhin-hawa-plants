@@ -213,6 +213,14 @@ function initializeModal() {
       event.preventDefault();
       openPitModal(Number(document.activeElement.getAttribute('data-index')));
     }
+
+    if (event.key === 'ArrowLeft') {
+        navigateToPit(-1);
+    } 
+    
+    if (event.key === 'ArrowRight') {
+        navigateToPit(1);
+    }
   });
 
   modalElements.image.addEventListener('load', () => {
@@ -227,6 +235,35 @@ function initializeModal() {
     modalElements.noPhotoMessage.textContent =
         'This photograph could not be loaded.';
     modalElements.noPhotoMessage.hidden = false;
+  });
+
+  let swipeStartX = 0;
+  let swipeStartY = 0;
+
+  modalElements.pitPhotoFrame.addEventListener('pointerdown', event => {
+      if (event.pointerType !== 'touch') return;
+
+      swipeStartX = event.clientX;
+      swipeStartY = event.clientY;
+  });
+
+  modalElements.pitPhotoFrame.addEventListener('pointerup', event => {
+      if (event.pointerType !== 'touch') return;
+
+      const deltaX = event.clientX - swipeStartX;
+      const deltaY = event.clientY - swipeStartY;
+
+      // Ignore short or predominantly vertical movements.
+      if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) {
+          return;
+      }
+
+      navigateToPit(deltaX < 0 ? 1 : -1);
+  });
+
+  modalElements.pitPhotoFrame.addEventListener('pointercancel', () => {
+      swipeStartX = 0;
+      swipeStartY = 0;
   });
 }
 

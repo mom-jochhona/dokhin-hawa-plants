@@ -150,6 +150,10 @@ button:disabled {
   color: #666;
 }
 
+#pit-photo-frame {
+    touch-action: pan-y;
+}
+
 .photo-frame {
   position: relative;
   display: grid;
