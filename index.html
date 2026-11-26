@@ -33,7 +33,12 @@
         </div>
         
         <div id="pit-photo-area" class="photo-area u-relative u-text-center">
-          <img id="pit-photo" class="photo-image" alt="" hidden>
+          <div class="photo-frame">
+            <img id="pit-photo" class="photo-image" alt="" hidden>
+            <div id="photo-loader" class="photo-loader u-hidden">
+                ⏳
+            </div>
+          </div>
           <!-- Carousel for an individual pit: navigation cycles through. -->
           <div id="photo-controls" class="u-flex u-items-center u-justify-center u-gap-md u-mt-md" hidden>
             <button id="previous-photo" type="button" aria-label="Previous photograph">‹</button>

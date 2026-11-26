@@ -83,6 +83,7 @@ const modalElements = {
   previousPit: document.getElementById('previous-pit-button'),
   nextPit: document.getElementById('next-pit-button'),
   image: document.getElementById('pit-photo'),
+  loader: document.getElementById('photo-loader'),
   photoControls: document.getElementById('photo-controls'),
   previousPhoto: document.getElementById('previous-photo'),
   nextPhoto: document.getElementById('next-photo'),
@@ -110,6 +111,7 @@ function displayPitPhoto(photoIndex) {
     modalElements.image.hidden = true;
     modalElements.photoControls.classList.add('u-hidden');
     modalElements.photoDate.classList.add('u-hidden');
+    modalElements.loader.classList.add('u-hidden');
     modalElements.noPhotoMessage.hidden = false;
     return;
   }
@@ -118,6 +120,8 @@ function displayPitPhoto(photoIndex) {
   currentPhotoIndex = (photoIndex + photos.length) % photos.length;
   const filename = photos[currentPhotoIndex];
 
+  // Show loader while the photograph is loading.
+  modalElements.loader.classList.remove('u-hidden');
   modalElements.image.src = `${IMAGE_BASE_URL}/${pitId}/${filename}`;
   modalElements.image.alt = `Photograph ${currentPhotoIndex + 1} of ${photos.length}`;
   modalElements.image.hidden = false;
@@ -184,6 +188,14 @@ function initializeModal() {
       event.preventDefault();
       openPitModal(Number(document.activeElement.getAttribute('data-index')));
     }
+  });
+
+  modalElements.image.addEventListener('load', () => {
+    modalElements.loader.classList.add('u-hidden');
+  });
+
+  modalElements.image.addEventListener('error', () => {
+    modalElements.loader.classList.add('u-hidden');
   });
 }
 
