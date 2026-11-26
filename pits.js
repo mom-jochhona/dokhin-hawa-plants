@@ -7,7 +7,7 @@ const pits = [
   {'row':'AVENUE','column':6,'x':350,'y':158,'species':'Pink Shower','images':['20260924.webp','20261123.webp']},
   {'row':'AVENUE','column':7,'x':369,'y':87,'species':'Akash Mallige','images':['20260924.webp','20261123.webp']},
   {'row':1,'column':1,'x':320,'y':542,'species':'Cluster Fig','images':['20261123.webp']},
-  {'row':1,'column':2,'x':375,'y':548,'species':'Jamun','images':['20261020.webp','20261123.webp']},
+  {'row':1,'column':2,'x':375,'y':548,'species':'Jamun','images':['20261123.webp']},
   {'row':1,'column':3,'x':431,'y':554,'species':'Guava','images':['20261123.webp']},
   {'row':1,'column':4,'x':487,'y':564,'species':'Curry Leaves','images':['20261123.webp']},
   {'row':1,'column':5,'x':532,'y':599,'species':'Tabebuia pallida','images':['20261123.webp']},
