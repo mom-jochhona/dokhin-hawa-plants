@@ -1,6 +1,7 @@
 const mapSettings = { viewBox: '0 0 1886 1064', pitRadius: 16, pitStroke: '#17212b', minZoom: .5, maxZoom: 5 };
 
 const svgNS = 'http://www.w3.org/2000/svg';
+const PAN_START_THRESHOLD = 5;
 const map = document.getElementById('map');
 const pitsLayer = document.getElementById('pits');
 
@@ -13,26 +14,32 @@ function getPitId(pit) {
 }
 
 function getPitLocation(pit) {
-  let section = pit.row;
-  if (Number.isInteger(pit.row)) {
-    section = `Row ${pit.row}`;
-  }
+  const section = Number.isInteger(pit.row) ? `Row ${pit.row}` : pit.row;
   return `${section}, ${pit.column}`;
 }
 
-function getPitName(pit) {
-  return pit.species;
-}
+function getDate(dateString) {
+  // Photo filenames begin with YYYYMMDD.
+  const match = dateString.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (!match) return dateString;
 
-function getDate(YYYYMMDD) {
-  // This is sloppy implementation, but serves the purpose
-  // ToDo: Need to refactor
-  const MONTHS = {'01': 'Jan', '02': 'Feb', '03': 'Mar', '04': 'Apr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Aug', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'};
-  const year = YYYYMMDD.substr(0,4);
-  const month = YYYYMMDD.substr(4,2);
-  const date = YYYYMMDD.substr(6,2);
+  const [, year, month, day] = match;
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
 
-  return `${MONTHS[month]} ${date}, ${year}`;
+  // Reject impossible dates rather than displaying a misleading date.
+  if (
+    date.getFullYear() !== Number(year) ||
+    date.getMonth() !== Number(month) - 1 ||
+    date.getDate() !== Number(day)
+  ) {
+    return dateString;
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric'
+  }).format(date);
 }
 
 function renderPitsInSVG() {
@@ -48,7 +55,7 @@ function renderPitsInSVG() {
     circle.setAttribute('stroke', pit.stroke || mapSettings.pitStroke);
     circle.setAttribute('tabindex', '0');
     circle.setAttribute('role', 'button');
-    circle.setAttribute('aria-label', `Open ${getPitId(pit, index)}`);
+    circle.setAttribute('aria-label', `Open ${getPitId(pit)}`);
     pitsLayer.appendChild(circle);
 
     const pitId = document.createElementNS(svgNS, 'text');
@@ -56,7 +63,7 @@ function renderPitsInSVG() {
     pitId.setAttribute('x', pit.x);
     pitId.setAttribute('y', pit.y - mapSettings.pitRadius - 16);
     pitId.setAttribute('text-anchor', 'middle');
-    pitId.textContent = getPitId(pit, index);
+    pitId.textContent = getPitId(pit);
     pitsLayer.appendChild(pitId);
 
     const pitName = document.createElementNS(svgNS, 'text');
@@ -64,30 +71,30 @@ function renderPitsInSVG() {
     pitName.setAttribute('x', pit.x);
     pitName.setAttribute('y', pit.y - mapSettings.pitRadius - 4);
     pitName.setAttribute('text-anchor', 'middle');
-    pitName.textContent = getPitName(pit, index);
+    pitName.textContent = pit.species;
     pitsLayer.appendChild(pitName);
   });
 }
 
 const modal = document.getElementById('pit-modal');
-const photoArea = document.getElementById('pit-photo-area');
 
 const IMAGE_BASE_URL =
-    "https://ik.imagekit.io/4zcvbyytp/dokhin-hawa-plants/images";
+  'https://ik.imagekit.io/4zcvbyytp/dokhin-hawa-plants/images';
 
 // Cache modal elements once. The markup remains in index.html; only its content changes.
 const modalElements = {
   title: document.getElementById('pit-title'),
-  close: document.getElementById('close-modal'),
-  previousPit: document.getElementById('previous-pit-button'),
-  nextPit: document.getElementById('next-pit-button'),
+  closeModalButton: document.getElementById('close-modal'),
+  previousPitButton: document.getElementById('previous-pit-button'),
+  nextPitButton: document.getElementById('next-pit-button'),
+  pitPhotoFrame: document.getElementById('pit-photo-frame'),
   image: document.getElementById('pit-photo'),
   loader: document.getElementById('photo-loader'),
   photoControls: document.getElementById('photo-controls'),
-  previousPhoto: document.getElementById('previous-photo'),
-  nextPhoto: document.getElementById('next-photo'),
-  photoCount: document.getElementById('photo-count'),
-  photoDate: document.getElementById('photo-date'),
+  previousPhotoButton: document.getElementById('previous-photo'),
+  nextPhotoButton: document.getElementById('next-photo'),
+  photoCountLabel: document.getElementById('photo-count'),
+  photoDateLabel: document.getElementById('photo-date'),
   noPhotoMessage: document.getElementById('no-photo-message')
 };
 
@@ -95,53 +102,66 @@ let currentPitIndex = -1;
 let currentPhotoIndex = 0;
 
 function updatePitNavigation() {
-  modalElements.previousPit.disabled = currentPitIndex <= 0;
-  modalElements.nextPit.disabled = currentPitIndex >= pits.length - 1;
+  modalElements.previousPitButton.disabled = currentPitIndex <= 0;
+  modalElements.nextPitButton.disabled = currentPitIndex >= pits.length - 1;
 }
 
-function displayPitPhoto(photoIndex) {
-  const pit = pits[currentPitIndex];
-  const photos = pit.images || [];
-  const pitId = getPitId(pit);
-
-  if (!photos.length) {
-    modalElements.image.removeAttribute('src');
-    modalElements.image.alt = 'No photograph available';
-    modalElements.image.hidden = true;
-    modalElements.photoControls.classList.add('u-hidden');
-    modalElements.photoDate.classList.add('u-hidden');
-    modalElements.loader.classList.add('u-hidden');
-    modalElements.noPhotoMessage.hidden = false;
-    return;
-  }
-
-  // Photograph navigation wraps around within the currently selected pit.
-  currentPhotoIndex = (photoIndex + photos.length) % photos.length;
-  const filename = photos[currentPhotoIndex];
-
-  // Show loader while the photograph is loading.
+// Display one already-selected photograph. Photo selection and wrapping are
+// handled by selectPitPhoto(), keeping this function focused on presentation.
+function displayPitPhoto(photoPath, photoDate, photoIndex, photoCount) {
   modalElements.loader.classList.remove('u-hidden');
-  modalElements.image.src = `${IMAGE_BASE_URL}/${pitId}/${filename}`;
-  modalElements.image.alt = `Photograph ${currentPhotoIndex + 1} of ${photos.length}`;
+  modalElements.pitPhotoFrame.classList.remove('u-hidden');
   modalElements.image.hidden = false;
+  modalElements.image.alt = `Photograph ${photoIndex + 1} of ${photoCount}`;
+  modalElements.image.src = photoPath;
+
   modalElements.photoControls.classList.remove('u-hidden');
-  modalElements.photoCount.textContent = `${currentPhotoIndex + 1} / ${photos.length}`;
-  modalElements.photoDate.textContent = getDate(filename.split('.')[0]);
-  modalElements.photoDate.classList.remove('u-hidden');
+  modalElements.photoCountLabel.textContent = `${photoIndex + 1} / ${photoCount}`;
+  modalElements.photoDateLabel.textContent = photoDate;
+  modalElements.photoDateLabel.classList.remove('u-hidden');
   modalElements.noPhotoMessage.hidden = true;
 }
 
-function updatePitModal(index) {
-  // Guard against invalid indices before accessing the pit record.
-  if (!Number.isInteger(index) || index < 0 || index >= pits.length) return;
+// Select a photograph by index, wrapping at either end of the current pit's
+// photograph list. Passing an index keeps navigation logic out of rendering.
+function selectPitPhoto(photoIndex) {
+  const photos = pits[currentPitIndex]?.images || [];
 
+  if (photos.length === 0) {
+    modalElements.image.removeAttribute('src');
+    modalElements.image.hidden = true;
+    modalElements.image.alt = '';
+    modalElements.photoControls.classList.add('u-hidden');
+    modalElements.photoDateLabel.classList.add('u-hidden');
+    modalElements.loader.classList.add('u-hidden');
+    modalElements.pitPhotoFrame.classList.add('u-hidden');
+    modalElements.noPhotoMessage.textContent =
+        'No photographs are linked to this pit yet.';
+    modalElements.noPhotoMessage.hidden = false;
+    currentPhotoIndex = 0;
+    return;
+  }
+
+  currentPhotoIndex = (photoIndex + photos.length) % photos.length;
+
+  const filename = photos[currentPhotoIndex];
+  const pitId = getPitId(pits[currentPitIndex]);
+  const photoPath = `${IMAGE_BASE_URL}/${pitId}/${filename}`;
+  const photoDate = getDate(filename.split('.')[0]);
+
+  displayPitPhoto(photoPath, photoDate, currentPhotoIndex, photos.length);
+}
+
+function updatePitModal(index) {
   currentPitIndex = index;
-  currentPhotoIndex = 0;
   const pit = pits[currentPitIndex];
+  const photos = pit.images || [];
 
   modalElements.title.textContent = `${pit.species} (${getPitLocation(pit)})`;
   updatePitNavigation();
-  displayPitPhoto((pit.images || []).length - 1); // Start with the most recent photograph.
+
+  // Show the most recent photograph first.
+  selectPitPhoto(photos.length - 1);
 }
 
 function openPitModal(index) {
@@ -150,7 +170,7 @@ function openPitModal(index) {
   updatePitModal(index);
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
-  modalElements.close.focus();
+  modalElements.closeModalButton.focus();
 }
 
 function navigateToPit(direction) {
@@ -165,15 +185,21 @@ function navigateToPit(direction) {
 function closePitModal() {
   modal.classList.remove('is-open');
   modal.setAttribute('aria-hidden', 'true');
+
+  const marker = pitsLayer.querySelector(
+    `.pit-marker[data-index="${currentPitIndex}"]`
+  );
+  marker?.focus();
 }
 
 function initializeModal() {
   // Register modal event listeners once, not every time a pit or photo changes.
-  modalElements.close.addEventListener('click', closePitModal);
-  modalElements.previousPit.addEventListener('click', () => navigateToPit(-1));
-  modalElements.nextPit.addEventListener('click', () => navigateToPit(1));
-  modalElements.previousPhoto.addEventListener('click', () => displayPitPhoto(currentPhotoIndex - 1));
-  modalElements.nextPhoto.addEventListener('click', () => displayPitPhoto(currentPhotoIndex + 1));
+  modalElements.closeModalButton.addEventListener('click', closePitModal);
+  modalElements.previousPitButton.addEventListener('click', () => navigateToPit(-1));
+  modalElements.nextPitButton.addEventListener('click', () => navigateToPit(1));
+  // Navigation controls select the next photo; the display function only renders it.
+  modalElements.previousPhotoButton.addEventListener('click', () => selectPitPhoto(currentPhotoIndex - 1));
+  modalElements.nextPhotoButton.addEventListener('click', () => selectPitPhoto(currentPhotoIndex + 1));
 
   modal.addEventListener('click', event => {
     if (event.target === modal) closePitModal();
@@ -195,6 +221,12 @@ function initializeModal() {
 
   modalElements.image.addEventListener('error', () => {
     modalElements.loader.classList.add('u-hidden');
+    modalElements.image.hidden = true;
+    modalElements.photoControls.classList.add('u-hidden');
+    modalElements.photoDateLabel.classList.add('u-hidden');
+    modalElements.noPhotoMessage.textContent =
+        'This photograph could not be loaded.';
+    modalElements.noPhotoMessage.hidden = false;
   });
 }
 
@@ -206,7 +238,15 @@ pitsLayer.addEventListener('click', event => {
 });
 
 // Map zoom and pan state.
-let zoom = 1, panX = 0, panY = 0, dragging = false, pointerMoved = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
+let zoom = 1;
+let panX = 0;
+let panY = 0;
+let dragging = false;
+let pointerMoved = false;
+let startX = 0;
+let startY = 0;
+let startPanX = 0;
+let startPanY = 0;
 
 // Track active pointers for touch gestures.
 const activePointers = new Map();
@@ -216,11 +256,15 @@ let pinchStartZoom = 1;
 let lastPinchMidpoint = null;
 
 function getViewBox() {
-  const [vx, vy, vw, vh] = mapSettings.viewBox.split(' ').map(Number);
-  const width = vw / zoom;
-  const height = vh / zoom;
-  const x = vx + (vw - width) / 2 - panX / zoom;
-  const y = vy + (vh - height) / 2 - panY / zoom;
+  const [baseX, baseY, baseWidth, baseHeight] =
+    mapSettings.viewBox.split(' ').map(Number);
+
+  // Zoom reduces the visible SVG coordinate range. The subtraction of
+  // half the size difference keeps the zoom centred before panning.
+  const width = baseWidth / zoom;
+  const height = baseHeight / zoom;
+  const x = baseX + (baseWidth - width) / 2 - panX / zoom;
+  const y = baseY + (baseHeight - height) / 2 - panY / zoom;
 
   return { x, y, width, height };
 }
@@ -239,6 +283,9 @@ function getSvgPoint(clientX, clientY) {
   return point.matrixTransform(map.getScreenCTM().inverse());
 }
 
+// Zoom around the pointer rather than the map centre. First find the
+// pointer's position as a fraction of the current viewBox; then calculate
+// the new viewBox origin so that the same SVG point stays under the pointer.
 function zoomAtPoint(nextZoom, clientX, clientY) {
   const boundedZoom = Math.max(mapSettings.minZoom, Math.min(mapSettings.maxZoom, nextZoom));
 
@@ -251,11 +298,11 @@ function zoomAtPoint(nextZoom, clientX, clientY) {
   const nextWidth = vw / boundedZoom;
   const nextHeight = vh / boundedZoom;
 
-  const fx = (anchor.x - oldView.x) / oldView.width;
-  const fy = (anchor.y - oldView.y) / oldView.height;
+  const horizontalAnchorRatio = (anchor.x - oldView.x) / oldView.width;
+  const verticalAnchorRatio = (anchor.y - oldView.y) / oldView.height;
 
-  const nextX = anchor.x - fx * nextWidth;
-  const nextY = anchor.y - fy * nextHeight;
+  const nextX = anchor.x - horizontalAnchorRatio * nextWidth;
+  const nextY = anchor.y - verticalAnchorRatio * nextHeight;
 
   // Keep the SVG point beneath the pointer stationary while zooming.
   zoom = boundedZoom;
@@ -389,7 +436,7 @@ map.addEventListener('pointermove', e => {
   const dx = e.clientX - startX;
   const dy = e.clientY - startY;
 
-  if (Math.hypot(dx, dy) > 5) pointerMoved = true;
+  if (Math.hypot(dx, dy) > PAN_START_THRESHOLD) pointerMoved = true;
 
   if (pointerMoved) {
     // Convert screen-pixel movement into SVG coordinate units.
