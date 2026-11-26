@@ -1,4 +1,3 @@
-
 const mapSettings = { viewBox: '0 0 1886 1064', pitRadius: 16, pitStroke: '#17212b', minZoom: .5, maxZoom: 5 };
 
 const svgNS = 'http://www.w3.org/2000/svg';
@@ -393,8 +392,17 @@ map.addEventListener('pointermove', e => {
   if (Math.hypot(dx, dy) > 5) pointerMoved = true;
 
   if (pointerMoved) {
-    panX = startPanX + dx;
-    panY = startPanY + dy;
+    // Convert screen-pixel movement into SVG coordinate units.
+    // SVG uses one common scale for both axes to preserve its aspect ratio.
+    const [, , viewBoxWidth, viewBoxHeight] = mapSettings.viewBox.split(' ').map(Number);
+    const rect = map.getBoundingClientRect();
+    const svgScale = Math.min(
+      rect.width / viewBoxWidth,
+      rect.height / viewBoxHeight
+    );
+
+    panX = startPanX + dx / svgScale;
+    panY = startPanY + dy / svgScale;
     applyView();
   }
 });
