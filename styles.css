@@ -151,7 +151,7 @@ button:disabled {
 }
 
 #pit-photo-frame {
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
 }
 
 .photo-frame {
