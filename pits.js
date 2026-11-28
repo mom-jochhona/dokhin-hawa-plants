@@ -1,4 +1,4 @@
-const pits = [
+export const pits = [
   {'row':'AVENUE','column':1,'x':258,'y':514,'species':'Kanchan','images':['20261123.webp']},
   {'row':'AVENUE','column':2,'x':277,'y':442,'species':'Tabebuia rosea','images':['20261123.webp']},
   {'row':'AVENUE','column':3,'x':296,'y':370,'species':'Kanchan','images':['20261123.webp']},

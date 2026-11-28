@@ -1,4 +1,4 @@
-# Dokhin Hawa Plants
+# Dokhin Hawa (দখিন হাওয়া) Plants
 
 An [interactive plantation map](https://mom-jochhona.github.io/dokhin-hawa-plants/) for **দখিন হাওয়া**.
 
@@ -20,27 +20,40 @@ A small project to document and explore a plantation through an interactive map.
 ## Project structure
 
 ```text
-dokhin-hawa-plants/
-│
-├── index.html              # Application structure
-├── styles.css              # Application styling
-├── app.js                  # Map interactions and application logic
-├── pits.js                 # Plantation pit data
-├── optimize_images.py      # Photograph optimisation script
-│
-├── images/                 # Original photographs (not tracked)
-├── images-optimized/       # Optimised photographs (not tracked)
-│
-└── README.md
+index.html
+styles.css
+pits.js
+app.js
+js/
+  map.js
+  pit-utils.js
+  modal/
+    modal.js
+    photo-viewer.js
+    navigation.js
 ```
+
+- `app.js`: application entry point and coordination
+- `js/map.js`: SVG pit rendering, map zoom, pan and pinch gestures
+- `js/modal/modal.js`: modal lifecycle and pit details
+- `js/modal/photo-viewer.js`: photograph loading, display, navigation and touch gestures
+- `js/modal/navigation.js`: previous/next pit navigation
+- `js/pit-utils.js`: shared pit and date formatting helpers
+- `pits.js`: plantation data, exported as an ES module
+
+The description panel is supported when a pit object contains a `description` property. The current `pits.js` data does not provide descriptions, so the panel remains hidden until descriptions are added.
 
 Photographs are hosted externally using ImageKit and are not stored in this repository.
 
-## Running locally
+## Run locally
 
-No build process or development server is required.
+From this project directory, run:
 
-Simply open `index.html` in a browser.
+```bash
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000> in your browser.
 
 ## Hosted application
 
