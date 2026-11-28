@@ -1,5 +1,7 @@
+/* =========================================================
+   PAGE AND MAP
+========================================================= */
 
-/* Base page */
 html,
 body {
   width: 100%;
@@ -10,54 +12,28 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* Atomic reusable utility classes */
-.u-hidden {
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
   display: none !important;
 }
 
-.u-flex {
-  display: flex;
-}
-
-.u-items-center {
-  align-items: center;
-}
-
-.u-justify-center {
-  justify-content: center;
-}
-
-.u-gap-md {
-  gap: 14px;
-}
-
-.u-mt-md {
-  margin-top: 18px;
-}
-
-.u-text-center {
-  text-align: center;
-}
-
-.u-relative {
-  position: relative;
-}
-
-/* Shared controls */
 button {
   padding: 7px 11px;
   border: 1px solid #aaa;
   border-radius: 6px;
   background: #fff;
   cursor: pointer;
+  font: inherit;
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: .45;
+  opacity: .35;
 }
 
-/* Map toolbar */
 .toolbar {
   position: fixed;
   z-index: 10;
@@ -67,7 +43,6 @@ button:disabled {
   gap: 8px;
 }
 
-/* North */
 .north-indicator {
   position: fixed;
   top: 20px;
@@ -93,98 +68,6 @@ button:disabled {
   font-weight: 700;
 }
 
-/* Modal overlay and dialog */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  display: none;
-  place-items: center;
-  padding: 18px;
-  box-sizing: border-box;
-  background: #0008;
-}
-
-.modal-overlay.is-open {
-  display: grid;
-}
-
-.modal-dialog {
-  position: relative;
-  width: min(520px, 100%);
-  max-height: min(760px, 90vh);
-  overflow: auto;
-  padding: 22px 0;
-  box-sizing: border-box;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 12px 40px #0004;
-}
-
-.modal-title {
-  margin: 0 42px 0 0;
-  padding: 18px 22px;
-  font-size: 22px;
-}
-
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  font-size: 22px;
-}
-
-/* Pit and photo navigation */
-.pit-navigation {
-  align-self: center;
-  padding: 0 22px;
-}
-
-.photo-area {
-  display: grid;
-  place-items: center;
-  min-height: 150px;
-  color: #666;
-}
-
-#pit-photo-frame {
-    touch-action: pan-y pinch-zoom;
-}
-
-.photo-frame {
-  position: relative;
-  display: grid;
-  place-items: center;
-}
-
-.photo-image {
-  display: block;
-  max-width: 100%;
-  max-height: 70vh;
-  object-fit: contain;
-}
-
-.photo-loader {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  font-size: 2rem;
-}
-
-.photo-date {
-  position: absolute;
-  bottom: 60px;
-  padding: 8px 16px;
-  color: #fff;
-  background: #000;
-}
-
-/* Map viewport */
 .map-wrap {
   display: grid;
   width: 100%;
@@ -198,4 +81,414 @@ button:disabled {
   background: #fff;
   box-shadow: 0 1px 8px #0002;
   touch-action: none;
+}
+
+/* =========================================================
+   MODAL SHELL
+========================================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  place-items: center;
+  padding: 2vh 2vw;
+  background: #000a;
+}
+
+.modal-overlay.is-open {
+  display: grid;
+}
+
+.modal-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1500px, 96vw);
+  height: min(94dvh, 1100px);
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #192725;
+  color: #f5f7f6;
+  box-shadow: 0 12px 50px #0006;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.modal-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 28px 16px;
+}
+
+.modal-heading {
+  min-width: 0;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: clamp(22px, 2.5vw, 34px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pit-position {
+  margin-top: 7px;
+  color: #b8c2c0;
+  font-size: 17px;
+}
+
+.modal-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: white;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  background: #ffffff18;
+}
+
+/* =========================================================
+   COLLAPSIBLE DESCRIPTION
+========================================================= */
+
+.pit-description-panel {
+  flex: 0 0 auto;
+  margin: 0 28px;
+  border-top: 1px solid #ffffff25;
+  border-bottom: 1px solid #ffffff25;
+}
+
+.pit-description-panel summary {
+  padding: 12px 0;
+  cursor: pointer;
+  color: #c5cecc;
+  font-size: 16px;
+}
+
+.pit-description {
+  padding: 0 0 14px;
+  color: #d5ddda;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   PHOTO STAGE
+   The stage receives all remaining vertical space.
+   The image is contained, never cropped or distorted.
+========================================================= */
+
+.photo-stage {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.photo-area,
+.photo-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.photo-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: pan-y;
+  background: #192725;
+}
+
+.photo-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* =========================================================
+   LOADING AND EMPTY/ERROR STATES
+========================================================= */
+
+.photo-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  background: #192725;
+  font-size: 32px;
+}
+
+.no-photo-message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 28px;
+  color: #c5cecc;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   PHOTO NAVIGATION — OVERLAID ON THE IMAGE
+========================================================= */
+
+.photo-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+.photo-controls button {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  padding: 0 0 5px;
+  border: 0;
+  border-radius: 50%;
+  background: #0009;
+  color: white;
+  font-size: 48px;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.photo-controls button:hover:not(:disabled) {
+  background: #000d;
+}
+
+.photo-controls button:disabled {
+  opacity: .3;
+}
+
+/* =========================================================
+   PHOTO METADATA — OVERLAID ON THE IMAGE
+========================================================= */
+
+.photo-date,
+.photo-count {
+  position: absolute;
+  z-index: 4;
+  bottom: 20px;
+  padding: 10px 15px;
+  border-radius: 7px;
+  color: white;
+  background: #000b;
+  pointer-events: none;
+}
+
+.photo-date {
+  left: 24px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.photo-count {
+  right: 24px;
+  font-size: 15px;
+}
+
+/* =========================================================
+   PIT NAVIGATION FOOTER
+========================================================= */
+
+.pit-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  min-height: 76px;
+  padding: 0 28px;
+  border-top: 1px solid #ffffff25;
+}
+
+.pit-footer button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.pit-footer button:last-child {
+  text-align: right;
+}
+
+.pit-footer button:hover:not(:disabled) {
+  background: #ffffff12;
+}
+
+.pit-footer button span[aria-hidden="true"] {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.footer-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 42px;
+  background: #ffffff55;
+}
+
+/* =========================================================
+   MOBILE — FULL-SCREEN MODAL
+========================================================= */
+
+@media (max-width: 700px) {
+  .modal-overlay {
+    display: none;
+    padding: 0;
+  }
+
+  .modal-overlay.is-open {
+    display: block;
+  }
+
+  .modal-dialog {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    gap: 12px;
+    padding: 14px 16px 12px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+  }
+
+  .pit-position {
+    margin-top: 5px;
+    font-size: 14px;
+  }
+
+  .modal-close {
+    width: 42px;
+    height: 42px;
+    font-size: 34px;
+  }
+
+  .pit-description-panel {
+    margin: 0 16px;
+  }
+
+  .pit-description-panel summary {
+    padding: 11px 0;
+    font-size: 15px;
+  }
+
+  .pit-description {
+    font-size: 14px;
+  }
+
+  .photo-controls {
+    padding: 0 10px;
+  }
+
+  .photo-controls button {
+    width: 44px;
+    height: 44px;
+    font-size: 34px;
+  }
+
+  .photo-date,
+  .photo-count {
+    bottom: 12px;
+    padding: 8px 10px;
+  }
+
+  .photo-date {
+    left: 10px;
+    font-size: 13px;
+  }
+
+  .photo-count {
+    right: 10px;
+    font-size: 12px;
+  }
+
+  .pit-footer {
+    min-height: 64px;
+    padding: 0 10px;
+  }
+
+  .pit-footer button {
+    padding: 10px 6px;
+    font-size: 14px;
+  }
+
+  .pit-footer button span[aria-hidden="true"] {
+    font-size: 25px;
+  }
+
+  .footer-divider {
+    height: 34px;
+  }
+
+  .north-indicator {
+    top: 12px;
+    right: 14px;
+  }
+
+  .north-indicator-arrow {
+    font-size: 34px;
+  }
+
+  .north-indicator-label {
+    font-size: 16px;
+  }
+
+  .toolbar {
+    top: 8px;
+    left: 8px;
+    gap: 5px;
+  }
+
+  .toolbar button {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
 }

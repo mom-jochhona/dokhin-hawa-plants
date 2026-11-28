@@ -22,41 +22,76 @@
     <span class="north-indicator-arrow" aria-hidden="true">⬆️</span>
     <span class="north-indicator-label">North</span>
   </div>
+
   <div id="pit-modal" class="modal-overlay" aria-hidden="true">
     <section id="pit-dialog" class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pit-title">
-      <button id="close-modal" class="modal-close" type="button" aria-label="Close">×</button>
-      <h2 id="pit-title" class="modal-title">Pit details</h2>
-      <!-- Carousel for all the pits: navigation stops at the first and last pit. -->
-      <div id="pit-carousel" class="u-flex u-justify-center">
-        <div id="previous-pit" class="pit-navigation">
-          <button id="previous-pit-button" type="button" aria-label="Previous pit">&lt;&lt;</button>
+
+      <!-- Header -->
+      <header class="modal-header">
+        <div class="modal-heading">
+          <h2 id="pit-title" class="modal-title">Pit details</h2>
+          <div id="pit-position" class="pit-position"></div>
         </div>
-        
-        <div id="pit-photo-area" class="photo-area u-relative u-text-center">
+
+        <button id="close-modal" class="modal-close" type="button" aria-label="Close">×</button>
+      </header>
+
+      <!-- Optional description -->
+      <details id="pit-description-panel" class="pit-description-panel" hidden>
+        <summary>Description</summary>
+        <div id="pit-description" class="pit-description"></div>
+      </details>
+
+      <!-- Main photograph -->
+      <main id="pit-carousel" class="photo-stage">
+        <div id="pit-photo-area" class="photo-area">
+
           <div id="pit-photo-frame" class="photo-frame">
             <img id="pit-photo" class="photo-image" alt="" hidden>
-            <div id="photo-loader" class="photo-loader u-hidden">
-                ⏳
+
+            <div id="photo-loader" class="photo-loader" hidden aria-live="polite">
+              ⏳
             </div>
+
+            <!-- Previous/next photograph -->
+            <div id="photo-controls" class="photo-controls" hidden>
+              <button id="previous-photo" type="button" aria-label="Previous photograph">‹</button>
+
+              <button id="next-photo" type="button" aria-label="Next photograph">›</button>
+            </div>
+
+            <!-- Photograph metadata -->
+            <div id="photo-date" class="photo-date" hidden></div>
+            <span id="photo-count" class="photo-count" hidden></span>
+
+            <p id="no-photo-message" class="no-photo-message" hidden aria-live="polite">
+              No photographs are linked to this pit yet.
+            </p>
           </div>
-          <!-- Carousel for an individual pit: navigation cycles through. -->
-          <div id="photo-controls" class="u-flex u-items-center u-justify-center u-gap-md u-mt-md" hidden>
-            <button id="previous-photo" type="button" aria-label="Previous photograph">‹</button>
-            <span id="photo-count"></span>
-            <button id="next-photo" type="button" aria-label="Next photograph">›</button>
-          </div>
-          <div id="photo-date" class="photo-date u-hidden"></div>
-          <!-- ToDo: Add a 404 or an empty pit image, or something similar -->
-          <p id="no-photo-message">No photographs are linked to this pit yet.</p>
         </div>
-        <div id="next-pit" class="pit-navigation">
-          <button id="next-pit-button" type="button" aria-label="Next pit">&gt;&gt;</button>
-        </div>
-      </div>
+      </main>
+
+      <!-- Previous/next pit -->
+      <footer class="pit-footer">
+        <button id="previous-pit-button" type="button">
+          <span aria-hidden="true">‹</span>
+          <span>Previous pit</span>
+        </button>
+
+        <div class="footer-divider"></div>
+
+        <button id="next-pit-button" type="button">
+          <span>Next pit</span>
+          <span aria-hidden="true">›</span>
+        </button>
+      </footer>
+
     </section>
   </div>
+
   <div id="map-wrap" class="map-wrap">
-    <svg id="map" class="map-canvas" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1886 1064" preserveAspectRatio="xMidYMid meet">
+    <svg id="map" class="map-canvas" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1886 1064"
+      preserveAspectRatio="xMidYMid meet">
       <!-- 
         Important!
         These style could be externalize
@@ -135,7 +170,6 @@
         .pit-name {
           font-size: 10px;
         }
-
       </style>
       <rect id="background" x="0" y="0" width="1886" height="1064" fill="#ffffff" />
       <g id="plot-boundary">
@@ -182,9 +216,7 @@
       <g id="map-labels">
 
         <!-- Avenue -->
-        <text id="label-avenue"
-          class="map-label area-label"
-          x="230" y="600"
+        <text id="label-avenue" class="map-label area-label" x="230" y="600"
           transform="rotate(18 230 600)">AVENUE</text>
 
         <!-- Plantation rows -->
@@ -206,14 +238,10 @@
 
         <!-- Wild areas -->
         <g id="wild-area-labels">
-          <text id="label-wild1"
-            class="map-label area-label"
-            x="1540" y="390" 
+          <text id="label-wild1" class="map-label area-label" x="1540" y="390"
             transform="rotate(18 1540 390)">WILD1</text>
 
-          <text id="label-wild2"
-            class="map-label area-label"
-            x="1660" y="428"
+          <text id="label-wild2" class="map-label area-label" x="1660" y="428"
             transform="rotate(18 1660 428)">WILD2</text>
         </g>
 

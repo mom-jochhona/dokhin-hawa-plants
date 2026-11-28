@@ -81,7 +81,6 @@ const modal = document.getElementById('pit-modal');
 const IMAGE_BASE_URL =
   'https://ik.imagekit.io/4zcvbyytp/dokhin-hawa-plants/images';
 
-// Cache modal elements once. The markup remains in index.html; only its content changes.
 const modalElements = {
   title: document.getElementById('pit-title'),
   closeModalButton: document.getElementById('close-modal'),
@@ -93,75 +92,107 @@ const modalElements = {
   photoControls: document.getElementById('photo-controls'),
   previousPhotoButton: document.getElementById('previous-photo'),
   nextPhotoButton: document.getElementById('next-photo'),
-  photoCountLabel: document.getElementById('photo-count'),
-  photoDateLabel: document.getElementById('photo-date'),
-  noPhotoMessage: document.getElementById('no-photo-message')
+  photoCount: document.getElementById('photo-count'),
+  photoDate: document.getElementById('photo-date'),
+  noPhotoMessage: document.getElementById('no-photo-message'),
+  position: document.getElementById('pit-position'),
+  descriptionPanel: document.getElementById('pit-description-panel'),
+  description: document.getElementById('pit-description')
 };
 
 let currentPitIndex = -1;
 let currentPhotoIndex = 0;
+let activePhotoSrc = '';
+
+function setVisible(element, visible) {
+  element.hidden = !visible;
+}
 
 function updatePitNavigation() {
   modalElements.previousPitButton.disabled = currentPitIndex <= 0;
   modalElements.nextPitButton.disabled = currentPitIndex >= pits.length - 1;
 }
 
-// Display one already-selected photograph. Photo selection and wrapping are
-// handled by selectPitPhoto(), keeping this function focused on presentation.
-function displayPitPhoto(photoPath, photoDate, photoIndex, photoCount) {
-  modalElements.loader.classList.remove('u-hidden');
-  modalElements.pitPhotoFrame.classList.remove('u-hidden');
-  modalElements.image.hidden = false;
-  modalElements.image.alt = `Photograph ${photoIndex + 1} of ${photoCount}`;
-  modalElements.image.src = photoPath;
-
-  modalElements.photoControls.classList.remove('u-hidden');
-  modalElements.photoCountLabel.textContent = `${photoIndex + 1} / ${photoCount}`;
-  modalElements.photoDateLabel.textContent = photoDate;
-  modalElements.photoDateLabel.classList.remove('u-hidden');
-  modalElements.noPhotoMessage.hidden = true;
+function hidePhotoPresentation() {
+  setVisible(modalElements.image, false);
+  setVisible(modalElements.loader, false);
+  setVisible(modalElements.photoControls, false);
+  setVisible(modalElements.photoDate, false);
+  setVisible(modalElements.photoCount, false);
 }
 
-// Select a photograph by index, wrapping at either end of the current pit's
-// photograph list. Passing an index keeps navigation logic out of rendering.
-function selectPitPhoto(photoIndex) {
-  const photos = pits[currentPitIndex]?.images || [];
+function showNoPhotoMessage(message) {
+  hidePhotoPresentation();
+  modalElements.image.removeAttribute('src');
+  modalElements.image.alt = '';
+  modalElements.noPhotoMessage.textContent = message;
+  setVisible(modalElements.noPhotoMessage, true);
+}
 
-  if (photos.length === 0) {
-    modalElements.image.removeAttribute('src');
-    modalElements.image.hidden = true;
-    modalElements.image.alt = '';
-    modalElements.photoControls.classList.add('u-hidden');
-    modalElements.photoDateLabel.classList.add('u-hidden');
-    modalElements.loader.classList.add('u-hidden');
-    modalElements.pitPhotoFrame.classList.add('u-hidden');
-    modalElements.noPhotoMessage.textContent =
-        'No photographs are linked to this pit yet.';
-    modalElements.noPhotoMessage.hidden = false;
+function selectPitPhoto(photoIndex) {
+  const pit = pits[currentPitIndex];
+  const photos = pit?.images || [];
+
+  if (!photos.length) {
     currentPhotoIndex = 0;
+    activePhotoSrc = '';
+    showNoPhotoMessage('No photographs are linked to this pit yet.');
     return;
   }
 
   currentPhotoIndex = (photoIndex + photos.length) % photos.length;
 
   const filename = photos[currentPhotoIndex];
-  const pitId = getPitId(pits[currentPitIndex]);
+  const pitId = getPitId(pit);
   const photoPath = `${IMAGE_BASE_URL}/${pitId}/${filename}`;
   const photoDate = getDate(filename.split('.')[0]);
 
-  displayPitPhoto(photoPath, photoDate, currentPhotoIndex, photos.length);
+  activePhotoSrc = new URL(photoPath, document.baseURI).href;
+
+  setVisible(modalElements.noPhotoMessage, false);
+  setVisible(modalElements.image, false);
+  setVisible(modalElements.loader, true);
+  setVisible(modalElements.photoControls, photos.length > 1);
+  setVisible(modalElements.photoDate, true);
+  setVisible(modalElements.photoCount, true);
+
+  modalElements.image.alt = `${pit.species}, ${pitId}, photograph ${currentPhotoIndex + 1} of ${photos.length}`;
+  modalElements.photoDate.textContent = photoDate;
+  modalElements.photoCount.textContent = `Photo ${currentPhotoIndex + 1} of ${photos.length}`;
+
+  modalElements.previousPhotoButton.disabled = photos.length < 2;
+  modalElements.nextPhotoButton.disabled = photos.length < 2;
+
+  // Assigning src starts the request. The load/error handlers below ignore
+  // events belonging to an earlier photograph.
+  modalElements.image.src = photoPath;
 }
 
 function updatePitModal(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= pits.length) return;
+
   currentPitIndex = index;
   const pit = pits[currentPitIndex];
-  const photos = pit.images || [];
+  const pitId = getPitId(pit);
 
-  modalElements.title.textContent = `${pit.species} (${getPitLocation(pit)})`;
+  modalElements.title.textContent = `${pit.species} · ${pitId}`;
+  modalElements.position.textContent =
+    `${getPitLocation(pit)} · Pit ${index + 1} of ${pits.length}`;
+
+  if (pit.description) {
+    modalElements.description.textContent = pit.description;
+    modalElements.descriptionPanel.open = false;
+    setVisible(modalElements.descriptionPanel, true);
+  } else {
+    modalElements.description.textContent = '';
+    modalElements.descriptionPanel.open = false;
+    setVisible(modalElements.descriptionPanel, false);
+  }
+
   updatePitNavigation();
 
-  // Show the most recent photograph first.
-  selectPitPhoto(photos.length - 1);
+  // Start with the most recent photograph in the data list.
+  selectPitPhoto((pit.images || []).length - 1);
 }
 
 function openPitModal(index) {
@@ -175,14 +206,13 @@ function openPitModal(index) {
 
 function navigateToPit(direction) {
   const nextIndex = currentPitIndex + direction;
-
-  // Pit navigation stops at the first and last records; it does not wrap.
   if (nextIndex < 0 || nextIndex >= pits.length) return;
-
   updatePitModal(nextIndex);
 }
 
 function closePitModal() {
+  if (!modal.classList.contains('is-open')) return;
+
   modal.classList.remove('is-open');
   modal.setAttribute('aria-hidden', 'true');
 
@@ -192,78 +222,108 @@ function closePitModal() {
   marker?.focus();
 }
 
+function navigatePhoto(direction) {
+  const photos = pits[currentPitIndex]?.images || [];
+  if (photos.length < 2) return;
+  selectPitPhoto(currentPhotoIndex + direction);
+}
+
 function initializeModal() {
-  // Register modal event listeners once, not every time a pit or photo changes.
   modalElements.closeModalButton.addEventListener('click', closePitModal);
   modalElements.previousPitButton.addEventListener('click', () => navigateToPit(-1));
   modalElements.nextPitButton.addEventListener('click', () => navigateToPit(1));
-  // Navigation controls select the next photo; the display function only renders it.
-  modalElements.previousPhotoButton.addEventListener('click', () => selectPitPhoto(currentPhotoIndex - 1));
-  modalElements.nextPhotoButton.addEventListener('click', () => selectPitPhoto(currentPhotoIndex + 1));
+  modalElements.previousPhotoButton.addEventListener('click', () => navigatePhoto(-1));
+  modalElements.nextPhotoButton.addEventListener('click', () => navigatePhoto(1));
 
   modal.addEventListener('click', event => {
     if (event.target === modal) closePitModal();
   });
 
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && modal.classList.contains('is-open')) closePitModal();
+    if (!modal.classList.contains('is-open')) return;
 
-    if ((event.key === 'Enter' || event.key === ' ') &&
-        document.activeElement?.classList.contains('pit-marker')) {
-      event.preventDefault();
-      openPitModal(Number(document.activeElement.getAttribute('data-index')));
+    if (event.key === 'Escape') {
+      closePitModal();
+      return;
     }
 
+    // Arrow keys navigate photographs while the modal is open.
     if (event.key === 'ArrowLeft') {
-        navigateToPit(-1);
-    } 
-    
-    if (event.key === 'ArrowRight') {
-        navigateToPit(1);
+      event.preventDefault();
+      navigatePhoto(-1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      navigatePhoto(1);
     }
   });
 
   modalElements.image.addEventListener('load', () => {
-    modalElements.loader.classList.add('u-hidden');
+    if (modalElements.image.src !== activePhotoSrc) return;
+
+    setVisible(modalElements.loader, false);
+    setVisible(modalElements.image, true);
+    setVisible(modalElements.noPhotoMessage, false);
   });
 
   modalElements.image.addEventListener('error', () => {
-    modalElements.loader.classList.add('u-hidden');
-    modalElements.image.hidden = true;
-    modalElements.photoControls.classList.add('u-hidden');
-    modalElements.photoDateLabel.classList.add('u-hidden');
+    if (modalElements.image.src !== activePhotoSrc) return;
+
+    setVisible(modalElements.loader, false);
+    setVisible(modalElements.image, false);
+    setVisible(modalElements.photoControls, false);
+    setVisible(modalElements.photoDate, false);
+    setVisible(modalElements.photoCount, false);
     modalElements.noPhotoMessage.textContent =
-        'This photograph could not be loaded.';
-    modalElements.noPhotoMessage.hidden = false;
+      'This photograph could not be loaded. Check your connection and try again.';
+    setVisible(modalElements.noPhotoMessage, true);
   });
 
-  let swipeStartX = 0;
-  let swipeStartY = 0;
+  // A horizontal touch swipe changes photographs, not pits. The CSS
+  // touch-action: pan-y keeps vertical page gestures available to the browser.
+  let swipeStartX = null;
+  let swipeStartY = null;
+  let touchPointerCount = 0;
 
   modalElements.pitPhotoFrame.addEventListener('pointerdown', event => {
-      if (event.pointerType !== 'touch') return;
+    if (event.pointerType !== 'touch') return;
 
-      swipeStartX = event.clientX;
-      swipeStartY = event.clientY;
+    touchPointerCount += 1;
+    if (touchPointerCount > 1) {
+      swipeStartX = null;
+      swipeStartY = null;
+      return;
+    }
+
+    swipeStartX = event.clientX;
+    swipeStartY = event.clientY;
   });
 
   modalElements.pitPhotoFrame.addEventListener('pointerup', event => {
-      if (event.pointerType !== 'touch') return;
+    if (event.pointerType !== 'touch') return;
 
-      const deltaX = event.clientX - swipeStartX;
-      const deltaY = event.clientY - swipeStartY;
+    touchPointerCount = Math.max(0, touchPointerCount - 1);
 
-      // Ignore short or predominantly vertical movements.
-      if (Math.abs(deltaX) < 50 || Math.abs(deltaX) < Math.abs(deltaY)) {
-          return;
-      }
+    if (swipeStartX === null || swipeStartY === null || touchPointerCount > 0) {
+      swipeStartX = null;
+      swipeStartY = null;
+      return;
+    }
 
-      navigateToPit(deltaX < 0 ? 1 : -1);
+    const deltaX = event.clientX - swipeStartX;
+    const deltaY = event.clientY - swipeStartY;
+
+    swipeStartX = null;
+    swipeStartY = null;
+
+    if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+    navigatePhoto(deltaX < 0 ? 1 : -1);
   });
 
   modalElements.pitPhotoFrame.addEventListener('pointercancel', () => {
-      swipeStartX = 0;
-      swipeStartY = 0;
+    touchPointerCount = 0;
+    swipeStartX = null;
+    swipeStartY = null;
   });
 }
 
