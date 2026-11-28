@@ -32,7 +32,8 @@ export function initPitModal({ pits }) {
 
   const photoViewer = createPhotoViewer({
     elements,
-    getCurrentPit: () => navigation.getCurrentPit()
+    getCurrentPit: () => navigation.getCurrentPit(),
+    navigatePit: direction => direction < 0 ? navigation.previous() : navigation.next()
   });
 
   function updatePitDetails(pit, index) {
@@ -103,10 +104,12 @@ export function initPitModal({ pits }) {
         close();
       } else if (event.key === 'ArrowLeft') {
         event.preventDefault();
-        photoViewer.navigate(-1);
+        // photoViewer.navigate(-1);
+        navigation.previous();
       } else if (event.key === 'ArrowRight') {
         event.preventDefault();
-        photoViewer.navigate(1);
+        // photoViewer.navigate(1);
+        navigation.next();
       }
     });
   }

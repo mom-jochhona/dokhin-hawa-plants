@@ -7,7 +7,7 @@ function setVisible(element, visible) {
   element.hidden = !visible;
 }
 
-export function createPhotoViewer({ elements, getCurrentPit }) {
+export function createPhotoViewer({ elements, getCurrentPit, navigatePit }) {
   let currentPhotoIndex = 0;
   let activePhotoSrc = '';
 
@@ -135,7 +135,11 @@ export function createPhotoViewer({ elements, getCurrentPit }) {
       swipeStartY = null;
 
       if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-      navigate(deltaX < 0 ? 1 : -1);
+      navigatePit(deltaX < 0 ? 1 : -1);
+      // ToDo: Revisit swipe behaviour:
+      // Should horizontal swipes navigate between pits or between photos
+      // of the current pit?
+      // navigate(deltaX < 0 ? 1 : -1);
     });
 
     elements.photoFrame.addEventListener('pointercancel', () => {
