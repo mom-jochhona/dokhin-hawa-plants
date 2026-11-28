@@ -95,58 +95,60 @@ export function createPhotoViewer({ elements, getCurrentPit, navigatePit }) {
       setVisible(elements.noPhotoMessage, true);
     });
 
+    // Disabled: custom swipe navigation conflicts with native photo
+    // zooming and panning on touch devices.
     // A horizontal touch swipe changes photographs, not pits.
     // touch-action: pan-y allows the browser to handle vertical gestures.
-    let swipeStartX = null;
-    let swipeStartY = null;
-    let touchPointerCount = 0;
+    // let swipeStartX = null;
+    // let swipeStartY = null;
+    // let touchPointerCount = 0;
 
-    elements.photoFrame.addEventListener('pointerdown', event => {
-      if (event.pointerType !== 'touch') return;
+    // elements.photoFrame.addEventListener('pointerdown', event => {
+    //   if (event.pointerType !== 'touch') return;
 
-      touchPointerCount += 1;
+    //   touchPointerCount += 1;
 
-      // Ignore swipes when a multi-touch gesture (e.g. pinch) is in progress.
-      if (touchPointerCount > 1) {
-        swipeStartX = null;
-        swipeStartY = null;
-        return;
-      }
+    //   // Ignore swipes when a multi-touch gesture (e.g. pinch) is in progress.
+    //   if (touchPointerCount > 1) {
+    //     swipeStartX = null;
+    //     swipeStartY = null;
+    //     return;
+    //   }
 
-      swipeStartX = event.clientX;
-      swipeStartY = event.clientY;
-    });
+    //   swipeStartX = event.clientX;
+    //   swipeStartY = event.clientY;
+    // });
 
-    elements.photoFrame.addEventListener('pointerup', event => {
-      if (event.pointerType !== 'touch') return;
+    // elements.photoFrame.addEventListener('pointerup', event => {
+    //   if (event.pointerType !== 'touch') return;
 
-      touchPointerCount = Math.max(0, touchPointerCount - 1);
+    //   touchPointerCount = Math.max(0, touchPointerCount - 1);
 
-      if (swipeStartX === null || swipeStartY === null || touchPointerCount > 0) {
-        swipeStartX = null;
-        swipeStartY = null;
-        return;
-      }
+    //   if (swipeStartX === null || swipeStartY === null || touchPointerCount > 0) {
+    //     swipeStartX = null;
+    //     swipeStartY = null;
+    //     return;
+    //   }
 
-      const deltaX = event.clientX - swipeStartX;
-      const deltaY = event.clientY - swipeStartY;
+    //   const deltaX = event.clientX - swipeStartX;
+    //   const deltaY = event.clientY - swipeStartY;
 
-      swipeStartX = null;
-      swipeStartY = null;
+    //   swipeStartX = null;
+    //   swipeStartY = null;
 
-      if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
-      navigatePit(deltaX < 0 ? 1 : -1);
-      // ToDo: Revisit swipe behaviour:
-      // Should horizontal swipes navigate between pits or between photos
-      // of the current pit?
-      // navigate(deltaX < 0 ? 1 : -1);
-    });
+    //   if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    //   navigatePit(deltaX < 0 ? 1 : -1);
+    //   // ToDo: Revisit swipe behaviour:
+    //   // Should horizontal swipes navigate between pits or between photos
+    //   // of the current pit?
+    //   // navigate(deltaX < 0 ? 1 : -1);
+    // });
 
-    elements.photoFrame.addEventListener('pointercancel', () => {
-      touchPointerCount = 0;
-      swipeStartX = null;
-      swipeStartY = null;
-    });
+    // elements.photoFrame.addEventListener('pointercancel', () => {
+    //   touchPointerCount = 0;
+    //   swipeStartX = null;
+    //   swipeStartY = null;
+    // });
   }
 
   return {
