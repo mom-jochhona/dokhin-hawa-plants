@@ -23,9 +23,9 @@ export function initPitModal({ pits }) {
     photoCount: document.getElementById('photo-count'),
     photoDate: document.getElementById('photo-date'),
     noPhotoMessage: document.getElementById('no-photo-message'),
-    position: document.getElementById('pit-position'),
-    descriptionPanel: document.getElementById('pit-description-panel'),
-    description: document.getElementById('pit-description')
+    // position: document.getElementById('pit-position'),
+    actionPanel: document.getElementById('pit-action-panel'),
+    action: document.getElementById('pit-action')
   };
 
   let isOpen = false;
@@ -37,20 +37,18 @@ export function initPitModal({ pits }) {
   });
 
   function updatePitDetails(pit, index) {
-    elements.title.textContent = `${pit.species} · ${getPitId(pit)}`;
-    elements.position.textContent =
-      `${getPitLocation(pit)} · Pit ${index + 1} of ${pits.length}`;
+    elements.title.textContent = `${pit.species} | ${getPitLocation(pit)}`;
+    // elements.position.textContent = `${getPitLocation(pit)} · Pit ${index + 1} of ${pits.length}`;
 
-    // Description is optional in the current pit data. Keep the expandable
-    // panel available whenever a description is supplied in pits.js.
-    if (pit.description) {
-      elements.description.textContent = pit.description;
-      elements.descriptionPanel.open = false;
-      setVisible(elements.descriptionPanel, true);
+    // Show the action panel only when an action is supplied in pits.js.
+    if (pit.action) {
+      elements.action.textContent = pit.action;
+      elements.actionPanel.open = true;
+      setVisible(elements.actionPanel, true);
     } else {
-      elements.description.textContent = '';
-      elements.descriptionPanel.open = false;
-      setVisible(elements.descriptionPanel, false);
+      elements.action.textContent = '';
+      elements.actionPanel.open = false;
+      setVisible(elements.actionPanel, false);
     }
 
     elements.previousPitButton.disabled = index <= 0;

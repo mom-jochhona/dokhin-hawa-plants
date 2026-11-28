@@ -9,7 +9,7 @@ export function getPitId(pit) {
 
 export function getPitLocation(pit) {
   const section = Number.isInteger(pit.row) ? `Row ${pit.row}` : pit.row;
-  return `${section}, ${pit.column}`;
+  return `${section} / ${pit.column}`;
 }
 
 export function getDate(dateString) {

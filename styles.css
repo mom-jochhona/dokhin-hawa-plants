@@ -168,21 +168,22 @@ button:disabled {
    COLLAPSIBLE DESCRIPTION
 ========================================================= */
 
-.pit-description-panel {
+.pit-action-panel {
   flex: 0 0 auto;
   margin: 0 28px;
-  border-top: 1px solid #ffffff25;
-  border-bottom: 1px solid #ffffff25;
+  /* border-top: 1px solid #ffffff25;
+  border-bottom: 1px solid #ffffff25; */
 }
 
-.pit-description-panel summary {
+.pit-action-panel summary {
   padding: 12px 0;
   cursor: pointer;
-  color: #c5cecc;
-  font-size: 16px;
+  color: #ff0000;
+  text-transform: uppercase;
+  font-size: 20px;
 }
 
-.pit-description {
+.pit-action {
   padding: 0 0 14px;
   color: #d5ddda;
   line-height: 1.55;
@@ -411,16 +412,16 @@ button:disabled {
     font-size: 34px;
   }
 
-  .pit-description-panel {
+  .pit-action-panel {
     margin: 0 16px;
   }
 
-  .pit-description-panel summary {
+  .pit-action-panel summary {
     padding: 11px 0;
     font-size: 15px;
   }
 
-  .pit-description {
+  .pit-action {
     font-size: 14px;
   }
 
